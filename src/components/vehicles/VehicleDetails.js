@@ -20,9 +20,9 @@ import { Flex } from "@chakra-ui/react";
 const endPin = require("assets/endPin.png");
 
 //production
-const API_URL_VEHICLES = "http://ekco-tracking.co.za:3002";
-const API_URL_ALERTS = "http://ekco-tracking.co.za:3001/api/alerts";
-const API_WEB_SOCKET = "wss://ekco-tracking.co.za:3001";
+const API_URL_VEHICLES = "https://fleetsvehicleapi.onrender.com";
+const API_URL_ALERTS = "https://fleetsgpsapi.onrender.com/api/alerts";
+const API_WEB_SOCKET = "wss://fleetsgpsapi.onrender.com";
 
 //local
 // const API_URL_VEHICLES = "http://localhost:3002";

@@ -104,7 +104,7 @@ function AlertsComponent() {
 
   useEffect(() => {
     // const ws = new WebSocket('ws://localhost:3001');
-    const ws = new WebSocket("wss://ekco-tracking.co.za:3001");
+    const ws = new WebSocket("wss://fleetsgpsapi.onrender.com");
 
     // const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     // const ws = new WebSocket(`${protocol}://${window.location.hostname}:3001`);
