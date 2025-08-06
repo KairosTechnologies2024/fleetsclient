@@ -1,0 +1,62 @@
+{
+  "name": "dashboard",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@chakra-ui/react": "^2.5.2",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@react-google-maps/api": "^2.20.7",
+    "@testing-library/jest-dom": "^5.14.1",
+    "@testing-library/react": "^13.0.0",
+    "@testing-library/user-event": "^13.2.1",
+    "axios": "^1.8.3",
+    "chart.js": "^4.2.1",
+    "file-saver": "^2.0.5",
+    "firebase": "^11.4.0",
+    "framer-motion": "^10.18.0",
+    "google-map-react": "^2.2.1",
+    "leaflet": "^1.9.4",
+    "mqtt": "^5.13.0",
+    "nodemailer": "^6.10.0",
+    "papaparse": "^5.5.3",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.2.0",
+    "react-datepicker": "^7.1.0",
+    "react-dom": "^18.2.0",
+    "react-firebase-hooks": "^5.1.1",
+    "react-geocode": "^1.0.0-alpha.1",
+    "react-hook-form": "^7.43.5",
+    "react-icons": "^4.8.0",
+    "react-leaflet": "^4.2.1",
+    "react-native-maps": "^1.15.6",
+    "react-router-dom": "^6.30.0",
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^2.1.0",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

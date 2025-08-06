@@ -1,0 +1,73 @@
+.device-logs-overlay {
+  background-color: rgba(0, 0, 0, 0.493);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.device-logs-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.device-logs-main {
+  position: fixed;
+  background-color: white;
+  margin: auto;
+  padding: 2rem;
+  border-radius: 4px;
+  transform: translateY(40px);
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.device-logs-main.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+.device-logs-header{
+  font-weight: bolder;
+  margin-bottom: 2rem;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+ 
+}
+
+.device-logs-content{
+   height:400px;
+   width:470px;
+    overflow-y: scroll;
+}
+
+
+.close-button{
+
+    cursor:pointer;
+}
+
+.btn-pause-streaming{
+
+  border:1px solid black;
+  padding:0.6rem 1rem;
+
+}
+
+
+.device-logs-inner-header{
+
+  display:flex;
+  align-items: center;
+  gaP:1rem;
+}
