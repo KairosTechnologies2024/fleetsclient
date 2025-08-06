@@ -46,7 +46,7 @@ function FleetMap() {
   useEffect(() => {
 
     // const ws = new WebSocket('ws://localhost:3001');
-    const ws = new WebSocket('ws://ekco-tracking.co.za:3001');
+    const ws = new WebSocket('wss://ekco-tracking.co.za:3001');
 
     // const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
     // const ws = new WebSocket(`${protocol}://${window.location.hostname}:3001`);

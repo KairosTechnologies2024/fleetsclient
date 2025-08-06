@@ -12,7 +12,7 @@ export const AlertService = ({ children }) => {
 
   useEffect(() => {
     // ws.current = new WebSocket("ws://localhost:3001");
-    ws.current = new WebSocket("ws://ekco-tracking.co.za:3001");
+    ws.current = new WebSocket("wss://ekco-tracking.co.za:3001");
 
     ws.current.onopen = () => console.log("WebSocket connected");
 
