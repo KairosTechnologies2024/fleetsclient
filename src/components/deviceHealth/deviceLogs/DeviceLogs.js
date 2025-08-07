@@ -14,7 +14,7 @@ function DeviceLogs() {
 
   const {setShowDeviceLog, serialNumber} = useContext(FleetsAppContext);
   // Use production or local API endpoint based on environment
-  const apiUrl =  'https://fleetsvehicleapi/api/logs';
+  const apiUrl =  'https://fleetsvehicleapi.onrender.com/api/logs';
 
   useEffect(() => {
     setVisible(true);
