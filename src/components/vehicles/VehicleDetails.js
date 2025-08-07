@@ -386,23 +386,28 @@ function VehicleDetailComponent({ onClose }) {
 
                     {/* Lock, Unlock & Unjam Buttons*/}
                     <Box>
-                        <Text fontWeight="bold" mb={1}>Lock Status:</Text>
+                      <Text fontWeight="bold" mb={1}>
+        Lock Status:{" "}
+        <Text as="span" color={isArmed ? "red.500" : "green.500"}>
+            {isArmed ? "LOCKED" : "UNLOCKED"}
+        </Text>
+        </Text>
                         <HStack spacing={4}>
                             <Button
                                 size="md"
-                                colorScheme="green"
+                                colorScheme="red"
                                 onClick={() => !isArmed && toggleArmedStatus()}
                                 isDisabled={isArmed || loadingStatus || isArmed === null}
                             >
-                                Activate
+                                Lock
                             </Button>
                             <Button
                                 size="md"
-                                colorScheme="red"
+                                colorScheme="green"
                                 onClick={() => isArmed && toggleArmedStatus()}
                                 isDisabled={!isArmed || loadingStatus || isArmed === null}
                             >
-                                Deactivate
+                                Unlock
                             </Button>
                             <Button
                                 size="md"
@@ -437,8 +442,8 @@ function VehicleDetailComponent({ onClose }) {
                                     borderRadius="md"
                                     bg={
                                         alert.alert?.toUpperCase() === "LOCK JAMMED !" ? "yellow.100" :
-                                            alert.alert?.toUpperCase() === "LOCKED" ? "green.50" :
-                                                alert.alert?.toUpperCase() === "UNLOCKED" ? "red.50" :
+                                            alert.alert?.toUpperCase() === "LOCKED" ? "red.50" :
+                                                alert.alert?.toUpperCase() === "UNLOCKED" ? "green.50" :
                                                     "white"
                                     }
                                 >

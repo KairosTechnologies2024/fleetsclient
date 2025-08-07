@@ -34,6 +34,12 @@ function AlertsComponent() {
 const {isLoadingAlerts, isLoadingVehicles,
         fetchAlertData,filteredAlerts, getVehicleDetails, setSelectedVehicle}= useContext(AlertsContext);
  const navigate = useNavigate();
+
+ useEffect(() => {
+    fetchAlertData();
+  }, []);
+
+
         return (
     <Center flexDirection="column" p={6} w="full">
       <Heading mb={6} size="lg">

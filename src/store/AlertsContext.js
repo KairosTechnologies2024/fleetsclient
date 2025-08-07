@@ -87,9 +87,7 @@ export const AlertsProvider = ({ children }) => {
     }
   };
 
-  useEffect(() => {
-    fetchAlertData();
-  }, []);
+ 
 
   useEffect(() => {
     // const ws = new WebSocket('ws://localhost:3001');
