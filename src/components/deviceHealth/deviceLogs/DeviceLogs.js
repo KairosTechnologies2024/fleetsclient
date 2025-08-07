@@ -1,16 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { IoMdClose } from "react-icons/io";
 import './device-logs.css';
+import { AppContext, FleetsAppContext } from 'store/AppContext';
 
-function DeviceLogs({ showDeviceLog, setShowDeviceLog, serialNumber  }) {
+function DeviceLogs() {
   const [logs, setLogs] = useState([]);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const eventSourceRef = useRef(null);
+
+
+  const {setShowDeviceLog, serialNumber} = useContext(FleetsAppContext);
   // Use production or local API endpoint based on environment
-  const apiUrl =  'https://fleetsmicroservices.onrender.com:3002/api/logs';
+  const apiUrl =  'https://fleetsvehicleapi/api/logs';
 
   useEffect(() => {
     setVisible(true);
