@@ -11,11 +11,11 @@ function DeviceLogs() {
   const [isPaused, setIsPaused] = useState(false);
   const eventSourceRef = useRef(null);
 
-const REACT_APP_AUTH_TOKEN=process.env.REACT_APP_AUTH_TOKEN;
+
 
   const {setShowDeviceLog, serialNumber} = useContext(FleetsAppContext);
   // Use production or local API endpoint based on environment
-  const apiUrl =  'https://fleetsvehicleapi.onrender.com/api/logs';
+  const apiUrl =  'https://fleetsvehicleapi.onrender.com/logs';
 
   useEffect(() => {
     setVisible(true);

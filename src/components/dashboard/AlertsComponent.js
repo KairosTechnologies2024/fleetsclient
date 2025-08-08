@@ -113,7 +113,7 @@ const {isLoadingAlerts, isLoadingVehicles,
                       <Td>
                         <Button
                           colorScheme="green"
-                          onClick={() => setSelectedVehicle(vehicle)}
+                          onClick={() => navigate(`/protected/vehicles/vehicle-details/${alert.deviceSerial}`)}
                         >
                           View
                         </Button>
