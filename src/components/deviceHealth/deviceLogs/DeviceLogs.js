@@ -11,6 +11,7 @@ function DeviceLogs() {
   const [isPaused, setIsPaused] = useState(false);
   const eventSourceRef = useRef(null);
 
+const REACT_APP_AUTH_TOKEN=process.env.REACT_APP_AUTH_TOKEN;
 
   const {setShowDeviceLog, serialNumber} = useContext(FleetsAppContext);
   // Use production or local API endpoint based on environment
@@ -77,7 +78,10 @@ function DeviceLogs() {
     setTimeout(() => {
      setShowDeviceLog(false);
       // Optionally, stop the stream on the backend
-      fetch(`${apiUrl}/${serialNumber}/retrieve/stream/stop`, { method: 'POST' });
+      fetch(`${apiUrl}/${serialNumber}/retrieve/stream/stop`, { method: 'POST' },{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
     }, 300); // match the CSS transition duration
   };
 

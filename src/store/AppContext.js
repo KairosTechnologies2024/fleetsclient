@@ -108,8 +108,6 @@ const [deviceHealthData, setDeviceHealthData] = useState([]);
 
 
 
-
-
   return (
     <FleetsAppContext.Provider value={{
      showDeviceLog, setShowDeviceLog, serialNumber, loadAllData, loading, fleetLoading,

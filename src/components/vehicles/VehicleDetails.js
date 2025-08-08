@@ -69,9 +69,17 @@ function VehicleDetailComponent({ onClose }) {
             setLoading(true);
             try {
                 const [vehicleRes, alertRes] = await Promise.all([
-                    fetch(`${API_URL_VEHICLES}/api/vehicles`),
-                    fetch(API_URL_ALERTS)
-                ]);
+                    fetch(`${API_URL_VEHICLES}/api/vehicles`,
+                        {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }}
+                    ),
+                    fetch(API_URL_ALERTS, {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }})
+            ]);
                 const vehicles = await vehicleRes.json();
                 const alertsData = await alertRes.json();
                 if (!isMounted) return;
@@ -199,7 +207,10 @@ function VehicleDetailComponent({ onClose }) {
         let isMounted = true;
         const interval = setInterval(async () => {
             try {
-                const alertRes = await fetch(API_URL_ALERTS);
+                const alertRes = await fetch(API_URL_ALERTS,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
                 const alertsData = await alertRes.json();
                 const matchedAlerts = alertsData
                     .filter((a) => a.device_serial === id)
@@ -241,7 +252,9 @@ function VehicleDetailComponent({ onClose }) {
         try {
             const response = await fetch(`${API_URL_VEHICLES}/api/lockVehicle`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json",
+                    "authorization": process.env.REACT_APP_AUTH_TOKEN,
+                 },
                 body: JSON.stringify({
                     serial_number: vehicle.device_serial,
                     status: newStatus ? 1 : 0,
@@ -276,7 +289,9 @@ function VehicleDetailComponent({ onClose }) {
         try {
             const response = await fetch(`${API_URL_VEHICLES}/api/lockVehicle`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json" ,
+                    "authorization": process.env.REACT_APP_AUTH_TOKEN,
+                },
                 body: JSON.stringify({
                     serial_number: vehicle.device_serial,
                     status: 0,

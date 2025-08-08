@@ -16,6 +16,8 @@ function DeviceHealth() {
 useEffect(() => {
   loadAllData();
 }, [])
+
+
   return (
     <>
     {showDeviceLog? (

@@ -28,7 +28,7 @@ const API_URL_DEVICE_HEALTH = "http://localhost:3001/api/deviceHealth";
 
 //On render
 
-
+const REACT_APP_AUTH_TOKEN= process.env.REACT_APP_AUTH_TOKEN;
 
 const API_URL_DEVICES = "https://fleetsgpsapi.onrender.com/api/data";
 const API_URL_ALERTS = "https://fleetsgpsapi.onrender.com/api/alerts";
@@ -72,7 +72,12 @@ export function parseWKBLocation(wkbHex) {
 //Fetch all fleet devices
 export async function fetchFleet(limit = 10) {
     try {
-        const response = await axios.get(`${API_URL_DEVICES}?limit=${limit}`);
+        const response = await axios.get(`${API_URL_DEVICES}?limit=${limit}`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         console.log("Raw API Response:", response.data);
 
         const parsedData = response.data.map(item => {
@@ -100,7 +105,10 @@ export async function fetchFleet(limit = 10) {
 //fetch latest coords for each device
 export async function fetchUniqueFleet(limit = 10) {
     try {
-        const response = await axios.get(`${API_URL_DEVICES}/latest`);
+        const response = await axios.get(`${API_URL_DEVICES}/latest`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
         console.log("Raw API Response:", response.data);
 
         const parsedData = response.data.map(item => {
@@ -127,7 +135,12 @@ export async function fetchUniqueFleet(limit = 10) {
 // Fetch latest coordinates for a unique device
 export async function fetchLatestCoordinates(deviceSerial) {
     try {
-        const response = await axios.get(`${API_URL_DEVICES}/${deviceSerial}/coordinates`);
+        const response = await axios.get(`${API_URL_DEVICES}/${deviceSerial}/coordinates`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         console.log(`Latest Coordinates for ${deviceSerial}:`, response.data);
 
         const parsedLocation = parseWKBLocation(response.data.location);
@@ -148,7 +161,12 @@ export async function fetchLatestCoordinates(deviceSerial) {
 // Fetch all alerts
 export async function fetchAlerts() {
     try {
-        const response = await axios.get(`${API_URL_ALERTS}`);
+        const response = await axios.get(`${API_URL_ALERTS}`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }}
+        );
         console.log("Fetched Alerts:", response.data);
         return response.data;
     } catch (error) {
@@ -160,7 +178,12 @@ export async function fetchAlerts() {
 //Fetch top 200
 export async function fetchTop200Alerts() {
     try {
-        const response = await axios.get(`${API_URL_ALERTS}/latest200`);
+        const response = await axios.get(`${API_URL_ALERTS}/latest200`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         console.log("Fetched Alerts:", response.data);
         return response.data;
     } catch (error) {
@@ -172,7 +195,12 @@ export async function fetchTop200Alerts() {
 //Fetch top 200 for each device
 export async function fetchTop200AlertsDevice() {
     try {
-        const response = await axios.get(`${API_URL_ALERTS}/top200`);
+        const response = await axios.get(`${API_URL_ALERTS}/top200`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         // console.log("Fetched Top 200 Alerts per Device:", response.data);
         return response.data;
     } catch (error) {
@@ -184,7 +212,12 @@ export async function fetchTop200AlertsDevice() {
 // Fetch alerts for a specific device
 export async function fetchDeviceAlerts(deviceSerial, limit = 10) {
     try {
-        const response = await axios.get(`${API_URL_ALERTS}/${deviceSerial}?limit=${limit}`);
+        const response = await axios.get(`${API_URL_ALERTS}/${deviceSerial}?limit=${limit}`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         console.log(`Fetched Alerts for ${deviceSerial}:`, response.data);
         return response.data;
     } catch (error) {
@@ -195,9 +228,15 @@ export async function fetchDeviceAlerts(deviceSerial, limit = 10) {
 
 //Vehciles
 // Fetch all vehicles
+
+
+
 export async function fetchVehicles(limit = 10) {
     try {
-        const response = await fetch(`${API_URL_VEHICLES}`);
+        const response = await fetch(`${API_URL_VEHICLES}`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
 
         if (!response.ok) {
             throw new Error(`Error fetching vehicles: ${response.statusText}`);
@@ -216,7 +255,11 @@ export async function fetchUniqueVehicle(device_serial, limit = 10) {
     const safeDeviceSerial = device_serial ?? 0;
 
     try {
-        const response = await fetch(`${API_URL_VEHICLES}/${safeDeviceSerial}`);
+        const response = await fetch(`${API_URL_VEHICLES}/${safeDeviceSerial}`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+        });
 
         if (response.ok) {
             const data = await response.json();
@@ -233,8 +276,15 @@ export async function fetchUniqueVehicle(device_serial, limit = 10) {
 
 export async function fetchUniqueFleetMerged() {
     try {
-        const vehiclesRes = await axios.get(`${API_URL_VEHICLES}`);
-        const devicesRes = await axios.get(`${API_URL_DEVICES}/latest`);
+        const vehiclesRes = await axios.get(`${API_URL_VEHICLES}`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
+        const devicesRes = await axios.get(`${API_URL_DEVICES}/latest`, {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
 
         const devicesMap = new Map(
             devicesRes.data.map(device => [device.device_serial, device])
@@ -263,7 +313,12 @@ export async function fetchUniqueFleetMerged() {
 //Device Health
 export async function fetchDeviceHealth() {
     try {
-        const response = await fetch(`${API_URL_DEVICE_HEALTH}`);
+        const response = await fetch(`${API_URL_DEVICE_HEALTH}`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            },
+            
+    });
 
         if (!response.ok) {
             throw new Error(`Error fetching Device Health: ${response.statusText}`);
@@ -280,7 +335,10 @@ export async function fetchDeviceHealth() {
 //Motor Health
 export async function fetchMotorHealth() {
     try {
-        const response = await fetch(`${API_URL_MOTOR_HEALTH}`);
+        const response = await fetch(`${API_URL_MOTOR_HEALTH}`, {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+     } });
 
         if (!response.ok) {
             throw new Error(`Error fetching Device Health: ${response.statusText}`);
@@ -301,6 +359,7 @@ export async function resetDevice(serial_number, status = 1) {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "authorization": process.env.REACT_APP_AUTH_TOKEN,
             },
             body: JSON.stringify({ serial_number, status }),
         });
@@ -317,7 +376,10 @@ export async function resetDevice(serial_number, status = 1) {
 
 //Trip Reports
 export async function fetchTripReport(deviceId) {
-    const res = await fetch(`${API_URL_TRIP_REPORT}/${deviceId}`);
+    const res = await fetch(`${API_URL_TRIP_REPORT}/${deviceId}`,{
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }});
 
     if (!res.ok) throw new Error("Failed to fetch trip data");
 
@@ -350,7 +412,12 @@ export async function fetchTripReport(deviceId) {
 // Ignition status
 export async function fetchIgnitionStatusFromAPI(serial) {
     try {
-        const res = await fetch(`${API_URL_IGNITION}/${serial}`);
+        const res = await fetch(`${API_URL_IGNITION}/${serial}`,
+            {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+    });
         if (!res.ok) throw new Error("Failed to fetch ignition status");
 
         const data = await res.json();

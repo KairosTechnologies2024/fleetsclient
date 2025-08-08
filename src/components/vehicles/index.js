@@ -14,34 +14,38 @@ const endPin = require("assets/endPin.png");
 const mapContainerStyle = { width: "100%", height: "500px" };
 const defaultCenter = { lat: -25.746111, lng: 28.188056 };
 const API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
-
+const sample= process.env.REACT_APP_SAMPLE;
+console.log("IT WORKS", sample)
 function Fleet() {
   const navigate = useNavigate();
   const { isLoaded } = useLoadScript({ googleMapsApiKey: API_KEY });
   const [fleet, setFleet] = useState([]);
   const [lockStatusMap, setLockStatusMap] = useState({});
-  const [loading, setLoading] = useState(true); // Initial loading state for fleet data
+  const [loading, setLoading] = useState(true);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [isTracking, setIsTracking] = useState(true);
-  const [isFiltering, setIsFiltering] = useState(false); // State for filtering loading
+
+  // Computed state for a single spinner
+  const isLoading = loading || !isLoaded;
 
   useEffect(() => {
-    // getFleetData should ideally set loading to false when it's done fetching
-    // Make sure your getFleetData function handles setting setLoading(false)
     getFleetData(setFleet, setLoading);
   }, []);
 
-  // Fetch initial lock status for all vehicles after fleet is loaded
   useEffect(() => {
-    // Only fetch lock statuses if fleet data has been loaded and it's not empty
-    if (!loading && fleet.length === 0) return; // If fleet is loaded but empty, no statuses to fetch
+    if (!loading && fleet.length === 0) return;
 
     const fetchLockStatuses = async () => {
       try {
-        const res = await fetch("https://fleetsvehicleapi.onrender.com/api/lockStatuses");
+        const res = await fetch("https://fleetsvehicleapi.onrender.com/api/lockStatuses",
+          {
+            headers:{
+                'authorization': process.env.REACT_APP_AUTH_TOKEN,
+            }
+      });
         if (res.ok) {
           const data = await res.json();
           const statusMap = {};
@@ -78,11 +82,10 @@ function Fleet() {
         setLockStatusMap(errorStatusMap);
       }
     };
-    // Only call fetchLockStatuses if fleet is not empty or loading is complete
     if (fleet.length > 0 || !loading) {
       fetchLockStatuses();
     }
-  }, [fleet, loading]); // Added loading to dependency array
+  }, [fleet, loading]);
 
   useEffect(() => {
     if (isTracking && selectedLocation) {
@@ -148,9 +151,6 @@ function Fleet() {
             });
             return updated;
           });
-
-          // WebSocket updates don't necessarily mean initial loading is done.
-          // The `getFleetData` function should control `setLoading(false)`.
         }
       } catch (err) {
         console.error("Error handling WebSocket message:", err);
@@ -163,7 +163,6 @@ function Fleet() {
 
   const handleClearSearch = () => {
     setSearchTerm("");
-    setIsFiltering(false);
   };
 
   const filteredFleet = fleet.filter((vehicle) => {
@@ -174,18 +173,6 @@ function Fleet() {
       String(vehicle.vehicle_year).includes(term)
     );
   });
-
-  useEffect(() => {
-    if (searchTerm !== "") {
-      setIsFiltering(true);
-      const timer = setTimeout(() => {
-        setIsFiltering(false);
-      }, 0);
-      return () => clearTimeout(timer);
-    } else {
-      setIsFiltering(false);
-    }
-  }, [searchTerm, fleet]);
 
   const getLockStatusColor = (entry) => {
     const status = entry?.status;
@@ -199,13 +186,20 @@ function Fleet() {
     return entry?.status || "UNKNOWN";
   };
 
-  if (!isLoaded) return <Spinner size="xl" />; // Google Maps API loading
+  if (isLoading) {
+    return (
+      <Center minH="100vh">
+        <Spinner size="xl" />
+      </Center>
+    );
+  }
+
+  console.log(process.env.SAMPLE)
 
   return (
     <>
       <Center flexDirection="column" p={6} w="full">
         <Heading mb={6} size="lg">Vehicle List</Heading>
-
         <Box w="full" maxW="600px" mb={4}>
           <InputGroup>
             <Input
@@ -222,104 +216,87 @@ function Fleet() {
             )}
           </InputGroup>
         </Box>
-
-        {/* Primary Loading State: Check `loading` first */}
-        {loading ? (
-          <Center minH="200px"><Spinner size="xl" /></Center>
-        ) : (
-          <Box w="full" overflowX="auto">
-            <Table variant="striped" colorScheme="gray" w="full">
-              <Thead>
+        <Box w="full" overflowX="auto">
+          <Table variant="striped" colorScheme="gray" w="full">
+            <Thead>
+              <Tr>
+                <Th>Vehicle Name</Th>
+                <Th>Model</Th>
+                <Th>Year</Th>
+                <Th>Latitude</Th>
+                <Th>Longitude</Th>
+                <Th>Speed (km/h)</Th>
+                <Th>Timestamp</Th>
+                <Th>Lock Status</Th>
+                <Th>Actions</Th>
+              </Tr>
+            </Thead>
+            <Tbody>
+              {filteredFleet.length === 0 ? (
                 <Tr>
-                  <Th>Vehicle Name</Th>
-                  <Th>Model</Th>
-                  <Th>Year</Th>
-                  <Th>Latitude</Th>
-                  <Th>Longitude</Th>
-                  <Th>Speed (km/h)</Th>
-                  <Th>Timestamp</Th>
-                  <Th>Lock Status</Th>
-                  <Th>Actions</Th>
+                  <Td colSpan={9}>
+                    <Center p={4}>
+                      <Text fontSize="lg" color="gray.500">
+                        {searchTerm ? `No results found for "${searchTerm}".` : "No vehicles to display."}
+                      </Text>
+                    </Center>
+                  </Td>
                 </Tr>
-              </Thead>
-              <Tbody>
-                {/* Secondary Loading State for Filtering */}
-                {isFiltering ? (
-                  <Tr>
-                    <Td colSpan={9}>
-                      <Center p={4}><Spinner size="md" /></Center>
-                    </Td>
-                  </Tr>
-                ) : (
-                  // Display based on filteredFleet length when not filtering
-                  filteredFleet.length === 0 ? (
-                    <Tr>
-                      <Td colSpan={9}>
-                        <Center p={4}>
-                          <Text fontSize="lg" color="gray.500">
-                            {searchTerm ? `No results found for "${searchTerm}".` : "No vehicles to display."}
-                          </Text>
-                        </Center>
+              ) : (
+                filteredFleet.map((item) => {
+                  const lockStatusEntry = lockStatusMap[item.device_serial];
+                  return (
+                    <Tr key={item.device_serial}>
+                      <Td>{item.vehicle_name}</Td>
+                      <Td>{item.vehicle_model}</Td>
+                      <Td>{item.vehicle_year}</Td>
+                      <Td>{item.latitude ? item.latitude.toFixed(6) : "-"}</Td>
+                      <Td>{item.longitude ? item.longitude.toFixed(6) : "-"}</Td>
+                      <Td>{item.speed ?? "-"} km/h</Td>
+                      <Td>
+                        {item.timestamp
+                          ? new Date(item.timestamp * 1000).toLocaleString()
+                          : "-"}
+                      </Td>
+                      <Td>
+                        <Tooltip label={getLockStatusLabel(lockStatusEntry)}>
+                          <Circle size="16px" bg={getLockStatusColor(lockStatusEntry)} />
+                        </Tooltip>
+                      </Td>
+                      <Td>
+                        <Stack direction="row" spacing={3}>
+                          <Button
+                            size="sm"
+                            colorScheme="blue"
+                            onClick={() => {
+                              setSelectedLocation(item);
+                              setMapCenter({
+                                lat: item.latitude || defaultCenter.lat,
+                                lng: item.longitude || defaultCenter.lng,
+                              });
+                              setIsTracking(true);
+                            }}
+                          >
+                            View on Map
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorScheme="green"
+                            onClick={() => {
+                              navigate(`/protected/vehicles/vehicle-details/${item.device_serial}`);
+                            }}
+                          >
+                            Details
+                          </Button>
+                        </Stack>
                       </Td>
                     </Tr>
-                  ) : (
-                    filteredFleet.map((item) => {
-                      const lockStatusEntry = lockStatusMap[item.device_serial];
-                      return (
-                        <Tr key={item.device_serial}>
-                          <Td>{item.vehicle_name}</Td>
-                          <Td>{item.vehicle_model}</Td>
-                          <Td>{item.vehicle_year}</Td>
-                          <Td>{item.latitude ? item.latitude.toFixed(6) : "-"}</Td>
-                          <Td>{item.longitude ? item.longitude.toFixed(6) : "-"}</Td>
-                          <Td>{item.speed ?? "-"} km/h</Td>
-                          <Td>
-                            {item.timestamp
-                              ? new Date(item.timestamp * 1000).toLocaleString()
-                              : "-"}
-                          </Td>
-                          <Td>
-                            <Tooltip label={getLockStatusLabel(lockStatusEntry)}>
-                              <Circle size="16px" bg={getLockStatusColor(lockStatusEntry)} />
-                            </Tooltip>
-                          </Td>
-                          <Td>
-                            <Stack direction="row" spacing={3}>
-                              <Button
-                                size="sm"
-                                colorScheme="blue"
-                                onClick={() => {
-                                  setSelectedLocation(item);
-                                  setMapCenter({
-                                    lat: item.latitude || defaultCenter.lat,
-                                    lng: item.longitude || defaultCenter.lng,
-                                  });
-                                  setIsTracking(true);
-                                }}
-                              >
-                                View on Map
-                              </Button>
-                              <Button
-                                size="sm"
-                                colorScheme="green"
-                                onClick={() => {
-                                  navigate(`/protected/vehicles/vehicle-details/${item.device_serial}`);
-                                }}
-                              >
-                                Details
-                              </Button>
-                            </Stack>
-                          </Td>
-                        </Tr>
-                      );
-                    })
-                  )
-                )}
-              </Tbody>
-            </Table>
-          </Box>
-        )}
-
+                  );
+                })
+              )}
+            </Tbody>
+          </Table>
+        </Box>
         {selectedLocation && (
           <Modal
             isOpen={!!selectedLocation}
