@@ -194,6 +194,7 @@ function Fleet() {
     );
   }
 
+  console.log(fleet)
   console.log(process.env.SAMPLE)
 
   return (
@@ -220,6 +221,7 @@ function Fleet() {
           <Table variant="striped" colorScheme="gray" w="full">
             <Thead>
               <Tr>
+                <Th>Fleet Number</Th>
                 <Th>Vehicle Name</Th>
                 <Th>Model</Th>
                 <Th>Year</Th>
@@ -247,6 +249,7 @@ function Fleet() {
                   const lockStatusEntry = lockStatusMap[item.device_serial];
                   return (
                     <Tr key={item.device_serial}>
+                      <Td>{item.fleet_number}</Td>
                       <Td>{item.vehicle_name}</Td>
                       <Td>{item.vehicle_model}</Td>
                       <Td>{item.vehicle_year}</Td>
