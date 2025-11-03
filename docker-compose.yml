@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  fleetspage:
+    build: .
+    container_name: fleetspage
+    ports:
+      - "3005:3005"
+    restart: always
+    environment:
+      - NODE_ENV=production
