@@ -123,7 +123,7 @@ function Fleet() {
   }, [fleet, filteredAlerts]);
 
   useEffect(() => {
-    const ws = new WebSocket("wss://fleetsclient.onrender.com");
+    const ws = new WebSocket("wss://fleetsgpsapi.onrender.com/api/alerts");
 
     ws.onopen = () => console.log("Connected to WebSocket");
     ws.onerror = (error) => console.error("WebSocket Error:", error);
