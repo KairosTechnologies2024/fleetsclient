@@ -89,17 +89,44 @@ export const getFleetData = async (setFleet, setLoading) => {
 
 export const fetchAddress = async (lat, lng) => {
   try {
-      const response = await axios.get(
-          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${API_KEY}`
-      );
-      if (response.data.status === "OK") {
-          return response.data.results[0]?.formatted_address || "Address not found";
-      } else {
-          return "Address not found";
-      }
+    console.log('🔍 Fetching address for coordinates:', { lat, lng });
+    
+    if (!lat || !lng) {
+      throw new Error('Invalid coordinates provided');
+    }
+
+    // Check if coordinates are the default center (no real location)
+    if (lat === -25.746111 && lng === 28.188056) {
+      throw new Error('Vehicle location not available yet');
+    }
+
+    if (!process.env.REACT_APP_GOOGLE_MAPS_API_KEY) {
+      throw new Error('Google Maps API key is missing');
+    }
+
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('📍 Geocoding API response status:', data.status);
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      const address = data.results[0].formatted_address;
+      console.log('✅ Found address:', address);
+      return address;
+    } else if (data.status === 'ZERO_RESULTS') {
+      throw new Error('No address found for these coordinates');
+    } else {
+      throw new Error(data.error_message || `Geocoding API error: ${data.status}`);
+    }
   } catch (error) {
-      console.error("Error fetching address:", error);
-      return "Error fetching address";
+    console.error('❌ Error in fetchAddress:', error);
+    throw error; // Important: re-throw the error for the component to handle
   }
 };
 

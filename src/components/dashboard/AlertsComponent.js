@@ -59,8 +59,8 @@ const {isLoadingAlerts, isLoadingVehicles,
             <Thead>
               <Tr>
                 <Th>Alert Type</Th>
-                <Th>Vehicle</Th>
-                <Th>No. Plate</Th>
+                <Th>Fleet Number</Th>
+                <Th>Registration</Th>
                 <Th>Actions</Th>
               </Tr>
             </Thead>
@@ -105,9 +105,9 @@ const {isLoadingAlerts, isLoadingVehicles,
                         </Flex>
                       </Td>
                       <Td>
-                        {vehicle.vehicle_year || "Unknown Year"}{" "}
-                        {vehicle.vehicle_name || "Unknown Model"}{" "}
-                        {vehicle.vehicle_model || ""}
+                     
+                        {vehicle.fleet_number || "Unknown Model"}{" "}
+                     
                       </Td>
                       <Td>{vehicle.vehicle_reg || "Unknown Plate"}</Td>
                       <Td>

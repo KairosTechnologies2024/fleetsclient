@@ -23,6 +23,17 @@ export default function Layout() {
         <Spinner color="teal.500" />
       </Center>
     );
+    const username= ()=>{
+      if(user.company === 'Demo Company'){
+
+
+        return 'City Logistics';
+      }
+
+
+      else{        return user.company;
+      }
+    }
 
   return (
     <Flex
@@ -45,7 +56,7 @@ export default function Layout() {
             Welcome back,{" "}
             <Flex display="inline-flex" fontWeight="bold">
               {user.role && user.company
-                ? `${user.role} at ${user.company}`
+                ? `${username()}`
                 : user.firstName}
             </Flex>
           </Heading>
