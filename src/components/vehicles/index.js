@@ -123,7 +123,7 @@ function Fleet() {
   }, [fleet, filteredAlerts]);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://ekco-tracking.co.za:3001");
+    const ws = new WebSocket("wss://fleetsclient.onrender.com");
 
     ws.onopen = () => console.log("Connected to WebSocket");
     ws.onerror = (error) => console.error("WebSocket Error:", error);
