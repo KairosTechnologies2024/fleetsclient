@@ -122,7 +122,7 @@ function Fleet() {
     setLockStatusMap(statusMap);
   }, [fleet, filteredAlerts]);
 
-  useEffect(() => {
+ /*  useEffect(() => {
     const ws = new WebSocket("wss://fleetsgpsapi.onrender.com/api/alerts");
 
     ws.onopen = () => console.log("Connected to WebSocket");
@@ -180,7 +180,7 @@ function Fleet() {
 
     ws.onclose = () => console.log("Disconnected from WebSocket");
     return () => ws.close();
-  }, []);
+  }, []); */
 
   const filteredFleet = useMemo(() => {
     return fleet.filter((vehicle) => {
