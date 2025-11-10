@@ -2,12 +2,15 @@ import React, { useContext, useEffect, useState, useMemo } from "react";
 import { Box } from "@chakra-ui/react";
 import {
   Table, Thead, Tbody, Tr, Th, Td, Spinner, Center, Heading, Button, Text,
-  Circle, Tooltip, useToast
+  Circle, Tooltip, useToast, Input
 } from "@chakra-ui/react";
 import { fetchDeviceHealth, fetchMotorHealth, resetDevice } from "../../API/apiHelper.js";
 import { getFleetData } from "hooks/fleetService";
 import DeviceLogs from "./deviceLogs/DeviceLogs";
 import { AppContext, FleetsAppContext } from "store/AppContext";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import logo from '../../assets/ekco-original logo.png';
 
 function DeviceHealth() {
   const { showDeviceLog, loadAllData, fleetLoading,
@@ -16,6 +19,7 @@ function DeviceHealth() {
   const [autoLockMap, setAutoLockMap] = useState({});
   const [fleet, setFleet] = useState([]);
   const [fleetLoadingLocal, setFleetLoadingLocal] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const toast = useToast();
   useEffect(() => {
@@ -74,17 +78,129 @@ function DeviceHealth() {
     });
     return map;
   }, [fleet]);
+
+  const generatePDF = () => {
+    const pdf = new jsPDF('l', 'mm', 'a4'); // landscape orientation
+
+    // Add logo
+    const img = new Image();
+    img.src = logo;
+    pdf.addImage(img, 'PNG', 14, 10, 30, 15); // x, y, width, height
+
+    // Add title
+    pdf.setFontSize(18);
+    pdf.text('Device Health Report', 50, 20);
+    pdf.setFontSize(12);
+    pdf.text(`Generated on: ${new Date().toLocaleString()}`, 50, 30);
+
+    // Prepare table data
+    const tableColumns = [
+      'Status',
+      'Device Serial',
+      'Fleet Number',
+      'Car Battery Status',
+      'Device Battery Voltage',
+      'Firmware Version',
+      'Board Revision',
+      'Gyro Health Status',
+      'Motor Serial',
+      'Motor Cycles',
+      'Time'
+    ];
+
+    const tableRows = [];
+
+    filteredDevices.forEach(device => {
+      const stale = isStale(device.time);
+      const motors = motorMap[device.device_serial] || [];
+      const fleetNumber = fleetNumberMap[device.device_serial] || 'N/A';
+
+      if (motors.length === 0) {
+        // Device with no motors
+        tableRows.push([
+          stale ? 'Stale' : 'Healthy',
+          device.device_serial,
+          fleetNumber,
+          device.car_battery_status ? 'On' : 'Off',
+          device.device_battery_voltage,
+          device.firmware_version,
+          device.board_revision,
+          device.gyro_health_status === true || device.gyro_health_status === "true" || device.gyro_health_status === 1 ? 'Healthy' : 'Unhealthy',
+          'N/A',
+          'N/A',
+          formatTimestamp(device.time)
+        ]);
+      } else {
+        // Devices with motors
+        motors.forEach((motor, index) => {
+          tableRows.push([
+            index === 0 ? (stale ? 'Stale' : 'Healthy') : '',
+            index === 0 ? device.device_serial : '',
+            index === 0 ? fleetNumber : '',
+            index === 0 ? (device.car_battery_status ? 'Connected' : 'Disconnected') : '',
+            index === 0 ? device.device_battery_voltage : '',
+            index === 0 ? device.firmware_version : '',
+            index === 0 ? device.board_revision : '',
+            index === 0 ? (device.gyro_health_status === true || device.gyro_health_status === "true" || device.gyro_health_status === 1 ? 'Healthy' : 'Unhealthy') : '',
+            motor.motor_serial,
+            motor.motor_cycles,
+            index === 0 ? formatTimestamp(device.time) : ''
+          ]);
+        });
+      }
+    });
+
+    // Generate table
+    autoTable(pdf, {
+      head: [tableColumns],
+      body: tableRows,
+      startY: 40,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontStyle: 'bold',
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      margin: { top: 40 },
+    });
+
+    pdf.save('device-health-report.pdf');
+  };
+
+  // Filter devices based on search term
+  const filteredDevices = filteredDeviceHealth.filter(device => {
+    const fleetNumber = fleetNumberMap[device.device_serial] || '';
+    return fleetNumber.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
  // console.log("filtered devices health ", filteredDeviceHealth)
   return (
     <>
       {showDeviceLog ? (
         <DeviceLogs />) : null}
       <Heading mb={4}>Device Health</Heading>
-      <Button mb={4} onClick={loadAllData} isLoading={loading}>
-        Refresh
-      </Button>
+      <Box mb={4} display="flex" alignItems="center" gap={4}>
+        <Input
+          placeholder="Search by Fleet Number"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          width="300px"
+        />
+        <Button onClick={loadAllData} isLoading={loading}>
+          Refresh
+        </Button>
+        <Button onClick={generatePDF} colorScheme="blue">
+          Generate PDF Report
+        </Button>
+      </Box>
 
-      {(loading || fleetLoading || fleetLoadingLocal) && filteredDeviceHealth.length === 0 ? (
+      {(loading || fleetLoading || fleetLoadingLocal) && filteredDevices.length === 0 ? (
         <Center><Spinner size="xl" /></Center>
       ) : (
       <Box overflowX="auto" width="100%" height="80vh" overflowY="auto">
@@ -108,7 +224,7 @@ function DeviceHealth() {
               </Tr>
             </Thead>
             <Tbody>
-              {filteredDeviceHealth.map((device) => {
+              {filteredDevices.map((device) => {
                 const stale = isStale(device.time);
                 const motors = motorMap[device.device_serial] || [];
                 const autoLockEnabled = device.auto_lock;
@@ -237,7 +353,7 @@ function DeviceHealth() {
           </Table>
         </Box>
       )}
-      {(!loading && filteredDeviceHealth.length === 0) && (
+      {(!loading && filteredDevices.length === 0) && (
         <Text>No device health data available for your fleet.</Text>
       )}
     </>
