@@ -24,6 +24,11 @@ function DeviceHealth() {
   const [searchTerm, setSearchTerm] = useState('');
   const [pdfLoading, setPdfLoading] = useState(false);
 
+
+
+
+
+
   const toast = useToast();
   useEffect(() => {
     loadAllData();
@@ -82,6 +87,16 @@ function DeviceHealth() {
     return map;
   }, [fleet]);
 
+
+//Last time stamp
+
+
+
+
+
+
+
+
   const generatePDF = async () => {
     setPdfLoading(true);
     const pdf = new jsPDF('l', 'mm', 'a4'); // landscape orientation
@@ -115,7 +130,7 @@ function DeviceHealth() {
       if (timestamp) {
         const timeDiff = Date.now() - (timestamp * 1000);
         const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
-        gpsStatusMap[vehicle.device_serial] = daysDiff <= 2 ? 'Active' : 'Inactive';
+      gpsStatusMap[vehicle.device_serial] = daysDiff <= 2 ? 'Active' : 'Inactive';
       } else {
         gpsStatusMap[vehicle.device_serial] = 'N/A';
       }
@@ -139,16 +154,26 @@ function DeviceHealth() {
     console.log('GPS Status Map:', gpsStatusMap);
     console.log('Address Map:', addressMap);
 
+    const timestampMap = {};
+    vehicleData.forEach(vehicle => {
+      if (vehicle.timestamp) {
+        timestampMap[vehicle.device_serial] = new Date(vehicle.timestamp * 1000).toLocaleString();
+      } else {
+        timestampMap[vehicle.device_serial] = 'N/A';
+      }
+    });
+    console.log('Timestamp Map:', timestampMap);
+
     // Prepare table data
     const tableColumns = [
-      'Status',
+      'Device',
       'Device Serial',
       'Fleet Number',
-      'Car Battery Status',
+      'Vehicle Battery Status',
       'Lock Health',
-      'GPS Status',
+     'Last GPS Timestamp',
       'Last Seen Address',
-      'Time'
+      'Device Ping'
     ];
 
     const tableRows = [];
@@ -159,6 +184,7 @@ function DeviceHealth() {
       const fleetNumber = fleetNumberMap[device.device_serial] || 'N/A';
       const gpsStatus = gpsStatusMap[device.device_serial] || 'N/A';
       const address = addressMap[device.device_serial] || 'N/A';
+      const timestamp = timestampMap[device.device_serial] || 'N/A';
 
       if (motors.length === 0) {
         // Device with no motors
@@ -167,8 +193,8 @@ function DeviceHealth() {
           device.device_serial,
           fleetNumber,
           device.car_battery_status ? 'On' : 'Off',
-          device.lock_health === false ? 'Malfunctioned' : 'Functioning',
-          gpsStatus,
+          device.lock_health === false ? 'Malfunction' : 'Healthy',
+          timestamp,
           address,
           formatTimestamp(device.time)
         ]);
@@ -179,8 +205,8 @@ function DeviceHealth() {
           device.device_serial,
           fleetNumber,
           device.car_battery_status ? 'Connected' : 'Disconnected',
-          device.lock_health === false ? 'Malfunctioned' : 'Functioning',
-          gpsStatus,
+          device.lock_health === false ? 'Malfunction' : 'Healthy',
+          timestamp,
           address,
           formatTimestamp(device.time)
         ]);
