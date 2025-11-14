@@ -4,7 +4,7 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, Spinner, Center, Heading, Button, Text,
   Circle, Tooltip, useToast, Input
 } from "@chakra-ui/react";
-import { fetchDeviceHealth, fetchMotorHealth, resetDevice, fetchLatestCoordinates, fetchUniqueFleetMerged } from "../../API/apiHelper.js";
+import { fetchDeviceHealth, fetchMotorHealth, resetDevice, fetchLatestCoordinates, fetchUniqueFleetMerged, fetchIgnitionStatusFromAPI } from "../../API/apiHelper.js";
 import { getFleetData, fetchAddress } from "hooks/fleetService";
 import DeviceLogs from "./deviceLogs/DeviceLogs";
 import { AppContext, FleetsAppContext } from "store/AppContext";
@@ -120,9 +120,10 @@ function DeviceHealth() {
       console.error('Failed to fetch vehicle data for GPS status:', error);
     }
 
-   
+
     const gpsStatusMap = {};
     const addressMap = {};
+    const ignitionStatusMap = {};
     console.log('Vehicle data for PDF:', vehicleData);
     await Promise.all(vehicleData.map(async (vehicle) => {
       console.log(`Processing vehicle ${vehicle.device_serial}:`, { lat: vehicle.latitude, lng: vehicle.longitude, timestamp: vehicle.timestamp });
@@ -150,9 +151,21 @@ function DeviceHealth() {
         console.log(`No coordinates for ${vehicle.device_serial}, setting address to N/A`);
         addressMap[vehicle.device_serial] = 'N/A';
       }
+
+      // Fetch ignition status
+      try {
+        console.log(`Fetching ignition status for ${vehicle.device_serial}`);
+        const ignitionStatus = await fetchIgnitionStatusFromAPI(vehicle.device_serial);
+        console.log(`Ignition status for ${vehicle.device_serial}:`, ignitionStatus);
+        ignitionStatusMap[vehicle.device_serial] = ignitionStatus ? ignitionStatus.toUpperCase() : 'N/A';
+      } catch (error) {
+        console.error(`Failed to fetch ignition status for ${vehicle.device_serial}:`, error);
+        ignitionStatusMap[vehicle.device_serial] = 'N/A';
+      }
     }));
     console.log('GPS Status Map:', gpsStatusMap);
     console.log('Address Map:', addressMap);
+    console.log('Ignition Status Map:', ignitionStatusMap);
 
     const timestampMap = {};
     vehicleData.forEach(vehicle => {
@@ -173,6 +186,7 @@ function DeviceHealth() {
       'Lock Health',
      'Last GPS Timestamp',
       'Last Seen Address',
+      'Ignition Status',
       'Device Ping'
     ];
 
@@ -185,6 +199,7 @@ function DeviceHealth() {
       const gpsStatus = gpsStatusMap[device.device_serial] || 'N/A';
       const address = addressMap[device.device_serial] || 'N/A';
       const timestamp = timestampMap[device.device_serial] || 'N/A';
+      const ignitionStatus = ignitionStatusMap[device.device_serial] || 'N/A';
 
       if (motors.length === 0) {
         // Device with no motors
@@ -196,6 +211,7 @@ function DeviceHealth() {
           device.lock_health === false ? 'Malfunction' : 'Healthy',
           timestamp,
           address,
+          ignitionStatus,
           formatTimestamp(device.time)
         ]);
       } else {
@@ -208,6 +224,7 @@ function DeviceHealth() {
           device.lock_health === false ? 'Malfunction' : 'Healthy',
           timestamp,
           address,
+          ignitionStatus,
           formatTimestamp(device.time)
         ]);
       }
