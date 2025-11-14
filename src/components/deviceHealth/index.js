@@ -4,13 +4,15 @@ import {
   Table, Thead, Tbody, Tr, Th, Td, Spinner, Center, Heading, Button, Text,
   Circle, Tooltip, useToast, Input
 } from "@chakra-ui/react";
-import { fetchDeviceHealth, fetchMotorHealth, resetDevice } from "../../API/apiHelper.js";
-import { getFleetData } from "hooks/fleetService";
+import { fetchDeviceHealth, fetchMotorHealth, resetDevice, fetchLatestCoordinates, fetchUniqueFleetMerged } from "../../API/apiHelper.js";
+import { getFleetData, fetchAddress } from "hooks/fleetService";
 import DeviceLogs from "./deviceLogs/DeviceLogs";
 import { AppContext, FleetsAppContext } from "store/AppContext";
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import logo from '../../assets/ekco-original logo.png';
+
+const API_URL_VEHICLES = "https://fleetsvehicleapi.onrender.com";
 
 function DeviceHealth() {
   const { showDeviceLog, loadAllData, fleetLoading,
@@ -20,6 +22,7 @@ function DeviceHealth() {
   const [fleet, setFleet] = useState([]);
   const [fleetLoadingLocal, setFleetLoadingLocal] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
 
   const toast = useToast();
   useEffect(() => {
@@ -79,7 +82,8 @@ function DeviceHealth() {
     return map;
   }, [fleet]);
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
+    setPdfLoading(true);
     const pdf = new jsPDF('l', 'mm', 'a4'); // landscape orientation
 
     // Add logo
@@ -93,18 +97,57 @@ function DeviceHealth() {
     pdf.setFontSize(12);
     pdf.text(`Generated on: ${new Date().toLocaleString()}`, 50, 30);
 
+    // Fetch vehicle data for GPS status
+    let vehicleData = [];
+    try {
+      vehicleData = await fetchUniqueFleetMerged();
+    } catch (error) {
+      console.error('Failed to fetch vehicle data for GPS status:', error);
+    }
+
+   
+    const gpsStatusMap = {};
+    const addressMap = {};
+    console.log('Vehicle data for PDF:', vehicleData);
+    await Promise.all(vehicleData.map(async (vehicle) => {
+      console.log(`Processing vehicle ${vehicle.device_serial}:`, { lat: vehicle.latitude, lng: vehicle.longitude, timestamp: vehicle.timestamp });
+      const timestamp = vehicle.timestamp;
+      if (timestamp) {
+        const timeDiff = Date.now() - (timestamp * 1000);
+        const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+        gpsStatusMap[vehicle.device_serial] = daysDiff <= 2 ? 'Active' : 'Inactive';
+      } else {
+        gpsStatusMap[vehicle.device_serial] = 'N/A';
+      }
+
+      // Fetch address using vehicle coordinates
+      if (vehicle.latitude && vehicle.longitude) {
+        try {
+          console.log(`Fetching address for ${vehicle.device_serial} at ${vehicle.latitude}, ${vehicle.longitude}`);
+          const address = await fetchAddress(vehicle.latitude, vehicle.longitude);
+          console.log(`Address for ${vehicle.device_serial}:`, address);
+          addressMap[vehicle.device_serial] = address;
+        } catch (error) {
+          console.error(`Failed to fetch address for ${vehicle.device_serial}:`, error);
+          addressMap[vehicle.device_serial] = 'N/A';
+        }
+      } else {
+        console.log(`No coordinates for ${vehicle.device_serial}, setting address to N/A`);
+        addressMap[vehicle.device_serial] = 'N/A';
+      }
+    }));
+    console.log('GPS Status Map:', gpsStatusMap);
+    console.log('Address Map:', addressMap);
+
     // Prepare table data
     const tableColumns = [
       'Status',
       'Device Serial',
       'Fleet Number',
       'Car Battery Status',
-      'Device Battery Voltage',
-      'Firmware Version',
-      'Board Revision',
-      'Gyro Health Status',
-      'Motor Serial',
-      'Motor Cycles',
+      'Lock Health',
+      'GPS Status',
+      'Last Seen Address',
       'Time'
     ];
 
@@ -114,6 +157,8 @@ function DeviceHealth() {
       const stale = isStale(device.time);
       const motors = motorMap[device.device_serial] || [];
       const fleetNumber = fleetNumberMap[device.device_serial] || 'N/A';
+      const gpsStatus = gpsStatusMap[device.device_serial] || 'N/A';
+      const address = addressMap[device.device_serial] || 'N/A';
 
       if (motors.length === 0) {
         // Device with no motors
@@ -122,31 +167,23 @@ function DeviceHealth() {
           device.device_serial,
           fleetNumber,
           device.car_battery_status ? 'On' : 'Off',
-          device.device_battery_voltage,
-          device.firmware_version,
-          device.board_revision,
-          device.gyro_health_status === true || device.gyro_health_status === "true" || device.gyro_health_status === 1 ? 'Healthy' : 'Unhealthy',
-          'N/A',
-          'N/A',
+          device.lock_health === false ? 'Malfunctioned' : 'Functioning',
+          gpsStatus,
+          address,
           formatTimestamp(device.time)
         ]);
       } else {
-        // Devices with motors
-        motors.forEach((motor, index) => {
-          tableRows.push([
-            index === 0 ? (stale ? 'Stale' : 'Healthy') : '',
-            index === 0 ? device.device_serial : '',
-            index === 0 ? fleetNumber : '',
-            index === 0 ? (device.car_battery_status ? 'Connected' : 'Disconnected') : '',
-            index === 0 ? device.device_battery_voltage : '',
-            index === 0 ? device.firmware_version : '',
-            index === 0 ? device.board_revision : '',
-            index === 0 ? (device.gyro_health_status === true || device.gyro_health_status === "true" || device.gyro_health_status === 1 ? 'Healthy' : 'Unhealthy') : '',
-            motor.motor_serial,
-            motor.motor_cycles,
-            index === 0 ? formatTimestamp(device.time) : ''
-          ]);
-        });
+        // Devices with motors - one row per device
+        tableRows.push([
+          stale ? 'Stale' : 'Healthy',
+          device.device_serial,
+          fleetNumber,
+          device.car_battery_status ? 'Connected' : 'Disconnected',
+          device.lock_health === false ? 'Malfunctioned' : 'Functioning',
+          gpsStatus,
+          address,
+          formatTimestamp(device.time)
+        ]);
       }
     });
 
@@ -171,15 +208,16 @@ function DeviceHealth() {
     });
 
     pdf.save('device-health-report.pdf');
+    setPdfLoading(false);
   };
 
-  // Filter devices based on search term
+
   const filteredDevices = filteredDeviceHealth.filter(device => {
     const fleetNumber = fleetNumberMap[device.device_serial] || '';
     return fleetNumber.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
- // console.log("filtered devices health ", filteredDeviceHealth)
+ 
   return (
     <>
       {showDeviceLog ? (
@@ -195,7 +233,7 @@ function DeviceHealth() {
         <Button onClick={loadAllData} isLoading={loading}>
           Refresh
         </Button>
-        <Button onClick={generatePDF} colorScheme="blue">
+        <Button onClick={generatePDF} colorScheme="blue" isLoading={pdfLoading} loadingText="Generating PDF...">
           Generate PDF Report
         </Button>
       </Box>
@@ -211,6 +249,7 @@ function DeviceHealth() {
                 <Th>Device Serial</Th>
                 <Th>Fleet Number</Th>
                 <Th>Car Battery Status</Th>
+                <Th>Lock Health</Th>
                 <Th>Device Battery Voltage</Th>
                 <Th>Firmware Version</Th>
                 <Th>Board Revision</Th>
@@ -241,6 +280,7 @@ function DeviceHealth() {
                       <Td>{device.device_serial}</Td>
                       <Td>{fleetNumberMap[device.device_serial] || 'N/A'}</Td>
                       <Td>{device.car_battery_status ? "On" : "Off"}</Td>
+                      <Td>{device.lock_health === false ? 'Malfunctioned' : 'Functioning'}</Td>
                       <Td>{device.device_battery_voltage}</Td>
                       <Td>{device.firmware_version}</Td>
                       <Td>{device.board_revision}</Td>
@@ -295,6 +335,7 @@ function DeviceHealth() {
                     <Td>{index === 0 ? device.device_serial : null}</Td>
                     <Td>{index === 0 ? (fleetNumberMap[device.device_serial] || 'N/A') : null}</Td>
                     <Td>{index === 0 ? (device.car_battery_status ? "Connected" : "Disconnected") : null}</Td>
+                    <Td>{index === 0 ? (device.lock_health === false ? 'Malfunctioned' : 'Functioning') : null}</Td>
                     <Td>{index === 0 ? device.device_battery_voltage : null}</Td>
                     <Td>{index === 0 ? device.firmware_version : null}</Td>
                     <Td>{index === 0 ? device.board_revision : null}</Td>
